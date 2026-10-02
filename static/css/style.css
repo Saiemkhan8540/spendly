@@ -200,6 +200,12 @@ a { color: inherit; text-decoration: none; }
 
 .hero-btn:hover { background: var(--accent); }
 
+button.hero-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
 /* ------------------------------------------------------------------ */
 /* Dashboard preview (hero visual)                                     */
 /* ------------------------------------------------------------------ */
@@ -616,6 +622,59 @@ a { color: inherit; text-decoration: none; }
     font-size: 0.8rem;
     color: var(--ink-faint);
 }
+
+/* ------------------------------------------------------------------ */
+/* Video modal                                                         */
+/* ------------------------------------------------------------------ */
+
+.video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(15, 15, 15, 0.75);
+}
+
+.video-modal[hidden] { display: none; }
+
+.video-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+}
+
+.video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.video-modal-close {
+    position: absolute;
+    top: -2.75rem;
+    right: 0;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.video-modal-close:hover { color: var(--accent-light); }
 
 /* ------------------------------------------------------------------ */
 /* Responsive                                                          */
