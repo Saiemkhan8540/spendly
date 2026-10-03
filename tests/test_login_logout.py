@@ -75,7 +75,7 @@ def test_navbar_reflects_auth_state(client):
     assert b"Log out" not in out
 
     login(client)
-    inn = client.get("/").data
+    inn = client.get("/terms").data
     assert b"Log out" in inn
     assert b"Get started" not in inn and b"Sign in" not in inn
 
