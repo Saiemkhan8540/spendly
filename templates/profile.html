@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% macro stat_card(label, value) %}
+<div class="stat-card">
+    <span class="stat-card__label">{{ label }}</span>
+    <span class="stat-card__value">{{ value }}</span>
+</div>
+{% endmacro %}
+
+{% block content %}
+
+<section class="profile">
+
+    <header class="profile-header">
+        <div class="profile-avatar" aria-hidden="true">{{ initial }}</div>
+        <div class="profile-identity">
+            <h1 class="profile-name">{{ user['name'] }}</h1>
+            <p class="profile-email">{{ user['email'] }}</p>
+            <p class="profile-meta">Member since {{ member_since }}</p>
+        </div>
+    </header>
+
+    <div class="profile-stats">
+        {{ stat_card('Total spent', '₹' ~ ('%.2f'|format(summary.total))) }}
+        {{ stat_card('Expenses', summary.count) }}
+        {{ stat_card('Top category', summary.top_category or '—') }}
+    </div>
+
+    <div class="profile-grid">
+
+        <section class="profile-card" aria-labelledby="categories-title">
+            <h2 class="profile-card__title" id="categories-title">Spending by category</h2>
+            {% if categories %}
+            <ul class="category-list">
+                {% for c in categories %}
+                <li class="category-row">
+                    <div class="category-row__top">
+                        <span class="category-row__name">{{ c.category }}</span>
+                        <span class="category-row__amount">₹{{ '%.2f'|format(c.total) }}</span>
+                    </div>
+                    <div class="category-bar" role="img"
+                         aria-label="{{ c.category }}: {{ c.percent }}% of total spending">
+                        <span style="width: {{ c.percent }}%"></span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="profile-empty">No spending to break down yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="profile-card" aria-labelledby="recent-title">
+            <h2 class="profile-card__title" id="recent-title">Recent expenses</h2>
+            {% if recent %}
+            <div class="table-wrap">
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Category</th>
+                            <th scope="col" class="num">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in recent %}
+                        <tr>
+                            <td>{{ e['date'] }}</td>
+                            <td>{{ e['description'] or '—' }}</td>
+                            <td><span class="category-badge">{{ e['category'] }}</span></td>
+                            <td class="num">₹{{ '%.2f'|format(e['amount']) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="profile-empty">No expenses yet. They will show up here once you add some.</p>
+            {% endif %}
+        </section>
+
+    </div>
+</section>
+
+{% endblock %}
