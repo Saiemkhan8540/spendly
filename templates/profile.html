@@ -22,6 +22,22 @@
         </div>
     </header>
 
+    <form class="range-filter" method="get" action="{{ url_for('profile') }}">
+        <div class="range-filter__field">
+            <label for="from">From</label>
+            <input class="form-input" type="date" id="from" name="from" value="{{ date_from }}">
+        </div>
+        <div class="range-filter__field">
+            <label for="to">To</label>
+            <input class="form-input" type="date" id="to" name="to" value="{{ date_to }}">
+        </div>
+        <button type="submit" class="btn-primary">Apply</button>
+        <a href="{{ url_for('profile') }}" class="btn-ghost">Clear</a>
+    </form>
+    {% if range_error %}
+    <p class="range-error" role="alert">{{ range_error }}</p>
+    {% endif %}
+
     <div class="profile-stats">
         {{ stat_card('Total spent', '₹' ~ ('%.2f'|format(summary.total))) }}
         {{ stat_card('Expenses', summary.count) }}
@@ -48,7 +64,7 @@
                 {% endfor %}
             </ul>
             {% else %}
-            <p class="profile-empty">No spending to break down yet.</p>
+            <p class="profile-empty">{% if filtered %}No expenses in this range.{% else %}No spending to break down yet.{% endif %}</p>
             {% endif %}
         </section>
 
@@ -78,7 +94,7 @@
                 </table>
             </div>
             {% else %}
-            <p class="profile-empty">No expenses yet. They will show up here once you add some.</p>
+            <p class="profile-empty">{% if filtered %}No expenses in this range.{% else %}No expenses yet. They will show up here once you add some.{% endif %}</p>
             {% endif %}
         </section>
 

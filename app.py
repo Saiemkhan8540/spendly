@@ -2,15 +2,13 @@ import os
 import sqlite3
 from datetime import datetime
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import (
     create_user,
-    get_category_totals,
     get_db,
-    get_expense_summary,
-    get_recent_expenses,
+    get_profile_data,
     get_user_by_email,
     get_user_by_id,
     init_db,
@@ -23,6 +21,28 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
 with app.app_context():
     init_db()
     seed_db()
+
+
+def parse_date_range(args):
+    """Return (date_from, date_to, error) from ?from= / ?to= query args.
+
+    Invalid bounds are dropped; a reversed range drops both. Never raises.
+    """
+    bounds = {}
+    error = None
+    for key in ("from", "to"):
+        value = args.get(key, "").strip()
+        if not value:
+            continue
+        try:
+            datetime.strptime(value, "%Y-%m-%d")
+            bounds[key] = value
+        except ValueError:
+            error = "Ignored an invalid date. Use the YYYY-MM-DD format."
+    date_from, date_to = bounds.get("from"), bounds.get("to")
+    if date_from and date_to and date_from > date_to:
+        return None, None, "The start date is after the end date, so the filter was ignored."
+    return date_from, date_to, error
 
 
 # ------------------------------------------------------------------ #
@@ -122,17 +142,8 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    summary = get_expense_summary(user_id)
-    categories = [
-        {
-            "category": row["category"],
-            "total": row["total"],
-            "percent": round(row["total"] / summary["total"] * 100, 1)
-            if summary["total"]
-            else 0,
-        }
-        for row in get_category_totals(user_id)
-    ]
+    date_from, date_to, range_error = parse_date_range(request.args)
+    data = get_profile_data(user_id, date_from, date_to)
 
     try:
         member_since = datetime.strptime(
@@ -146,10 +157,30 @@ def profile():
         user=user,
         initial=user["name"][:1].upper(),
         member_since=member_since,
-        summary=summary,
-        categories=categories,
-        recent=get_recent_expenses(user_id),
+        summary=data["summary"],
+        categories=data["categories"],
+        recent=data["recent"],
+        date_from=date_from or request.args.get("from", ""),
+        date_to=date_to or request.args.get("to", ""),
+        filtered=bool(date_from or date_to),
+        range_error=range_error,
     )
+
+
+@app.route("/profile/data")
+def profile_data():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify(error="Not logged in"), 401
+
+    date_from, date_to, _ = parse_date_range(request.args)
+    data = get_profile_data(user_id, date_from, date_to)
+    data["summary"]["total"] = round(data["summary"]["total"], 2)
+    for c in data["categories"]:
+        c["total"] = round(c["total"], 2)
+    for e in data["recent"]:
+        e["amount"] = round(e["amount"], 2)
+    return jsonify(data)
 
 
 @app.route("/expenses/add")
